@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eclipse Scanner – Web Security Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0b0b0f;
+            color: #e8e8ed;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            padding: 0 24px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #14141a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a35;
+            border-radius: 4px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 1px solid #1e1e26;
+            margin-bottom: 48px;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .logo span {
+            color: #5f7af5;
+        }
+
+        .version {
+            color: #5a5a6e;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid #1e1e26;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* Hero */
+        .hero {
+            margin-bottom: 56px;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .hero h1 span {
+            color: #5f7af5;
+        }
+
+        .hero p {
+            color: #8a8a9e;
+            font-size: 1.05rem;
+            max-width: 540px;
+        }
+
+        /* Scanner Box */
+        .scanner-box {
+            background: #12121a;
+            border: 1px solid #1e1e26;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 32px 0 24px;
+        }
+
+        .scanner-box .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6a6a7e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .input-row input {
+            flex: 1;
+            min-width: 240px;
+            padding: 14px 18px;
+            background: #0b0b0f;
+            border: 1px solid #1e1e26;
+            border-radius: 8px;
+            color: #e8e8ed;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #5f7af5;
+        }
+
+        .input-row button {
+            padding: 14px 36px;
+            background: #5f7af5;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .input-row button:hover {
+            background: #4a66e0;
+        }
+
+        .input-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 32px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stats-row .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #6a6a7e;
+        }
+
+        .stats-row .stat .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot.green {
+            background: #3bcc8a;
+        }
+        .dot.blue {
+            background: #5f7af5;
+        }
+        .dot.yellow {
+            background: #e6b84c;
+        }
+
+        /* Results */
+        #results {
+            display: none;
+            margin: 48px 0;
+        }
+
+        #results.active {
+            display: block;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .report-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .report-header .meta {
+            font-size: 0.8rem;
+            color: #6a6a7e;
+        }
+
+        .report-header .meta span {
+            color: #e8e8ed;
+        }
+
+        .score-section {
+            display: flex;
+            gap: 48px;
+            align-items: center;
+            background: #12121a;
+            border: 1px solid #1e1e26;
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .score-ring {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(#5f7af5 0%, #1e1e26 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .score-ring .inner {
+            text-align: center;
+        }
+
+        .score-ring .number {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-ring .label {
+            font-size: 0.6rem;
+            color: #8a8a9e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .severity-counts {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .severity-counts .item {
+            text-align: center;
+        }
+
+        .severity-counts .item .count {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .severity-counts .item .desc {
+            font-size: 0.7rem;
+            color: #6a6a7e;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .count-critical {
+            color: #f55a6e;
+        }
+        .count-high {
+            color: #f5a34a;
+        }
+        .count-medium {
+            color: #e6b84c;
+        }
+        .count-low {
+            color: #5fc9c9;
+        }
+        .count-passed {
+            color: #3bcc8a;
+        }
+
+        .issue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .issue-item {
+            background: #12121a;
+            border: 1px solid #1e1e26;
+            border-radius: 8px;
+            padding: 20px 24px;
+            border-left: 4px solid #1e1e26;
+        }
+
+        .issue-item.critical {
+            border-left-color: #f55a6e;
+        }
+        .issue-item.high {
+            border-left-color: #f5a34a;
+        }
+        .issue-item.medium {
+            border-left-color: #e6b84c;
+        }
+        .issue-item.low {
+            border-left-color: #5fc9c9;
+        }
+        .issue-item.passed {
+            border-left-color: #3bcc8a;
+        }
+
+        .issue-item .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .issue-item .head .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .issue-item .head .severity {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 2px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .sev-critical {
+            background: #f55a6e20;
+            color: #f55a6e;
+        }
+        .sev-high {
+            background: #f5a34a20;
+            color: #f5a34a;
+        }
+        .sev-medium {
+            background: #e6b84c20;
+            color: #e6b84c;
+        }
+        .sev-low {
+            background: #5fc9c920;
+            color: #5fc9c9;
+        }
+        .sev-passed {
+            background: #3bcc8a20;
+            color: #3bcc8a;
+        }
+
+        .issue-item .description {
+            color: #8a8a9e;
+            font-size: 0.9rem;
+            margin: 8px 0 12px;
+        }
+
+        .issue-item .fix {
+            background: #0b0b0f;
+            border: 1px solid #1a1a22;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #c8c8d4;
+            margin-top: 8px;
+        }
+
+        .issue-item .fix-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #5f7af5;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid #1e1e26;
+            border-radius: 6px;
+            padding: 4px 16px;
+            color: #8a8a9e;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .copy-btn:hover {
+            border-color: #5f7af5;
+            color: #e8e8ed;
+        }
+
+        .export-btn {
+            background: transparent;
+            border: 1px solid #1e1e26;
+            border-radius: 6px;
+            padding: 8px 20px;
+            color: #e8e8ed;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .export-btn:hover {
+            border-color: #5f7af5;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #1e1e26;
+            padding: 24px 0;
+            margin-top: 48px;
+            font-size: 0.8rem;
+            color: #4a4a5e;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .score-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .input-row input {
+                min-width: 100%;
+            }
+            .input-row button {
+                width: 100%;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <header>
+            <div class="logo">Eclipse<span>Scanner</span></div>
+            <div class="version">v1.0</div>
+        </header>
+
+        <section class="hero">
+            <h1>Web <span>security</span> analysis</h1>
+            <p>Scans for exposed secrets, misconfigurations, and common vulnerabilities. Results in seconds.</p>
+        </section>
+
+        <div class="scanner-box">
+            <span class="label">Target URL</span>
+            <div class="input-row">
+                <input type="url" id="urlInput" placeholder="https://example.com" />
+                <button id="scanBtn">Run Scan</button>
+            </div>
+            <div class="stats-row">
+                <span class="stat"><span class="dot green"></span> 20+ security checks</span>
+                <span class="stat"><span class="dot blue"></span> OWASP Top 10</span>
+                <span class="stat"><span class="dot yellow"></span> Real-time results</span>
+            </div>
+        </div>
+
+        <div id="results">
+            <div class="report-header">
+                <h2>Scan Report</h2>
+                <div>
+                    <span class="meta" id="scanTime">—</span>
+                    <button class="export-btn" id="exportBtn">Export Report</button>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <div class="score-ring">
+                    <div class="inner">
+                        <div class="number" id="scoreNumber">—</div>
+                        <div class="label">Score</div>
+                    </div>
+                </div>
+                <div class="severity-counts">
+                    <div class="item"><div class="count count-critical" id="criticalCount">0</div><div class="desc">Critical</div></div>
+                    <div class="item"><div class="count count-high" id="highCount">0</div><div class="desc">High</div></div>
+                    <div class="item"><div class="count count-medium" id="mediumCount">0</div><div class="desc">Medium</div></div>
+                    <div class="item"><div class="count count-low" id="lowCount">0</div><div class="desc">Low</div></div>
+                    <div class="item"><div class="count count-passed" id="passedCount">0</div><div class="desc">Passed</div></div>
+                </div>
+            </div>
+
+            <div class="issue-list" id="issueList"></div>
+        </div>
+
+        <footer>Eclipse Scanner — security analysis for modern web applications.</footer>
+
+    </div>
+
+    <script>
+        (function() {
+
+            const scanBtn = document.getElementById('scanBtn');
+            const urlInput = document.getElementById('urlInput');
+            const resultsEl = document.getElementById('results');
+            const issueList = document.getElementById('issueList');
+            const scoreNumber = document.getElementById('scoreNumber');
+            const criticalCount = document.getElementById('criticalCount');
+            const highCount = document.getElementById('highCount');
+            const mediumCount = document.getElementById('mediumCount');
+            const lowCount = document.getElementById('lowCount');
+            const passedCount = document.getElementById('passedCount');
+            const scanTime = document.getElementById('scanTime');
+            const exportBtn = document.getElementById('exportBtn');
+
+            const API_URL = window.location.hostname === 'localhost'
+                ? 'http://localhost:5000/scan'
+                : '/api/scan';
+
+            function runScan(url) {
+                scanBtn.disabled = true;
+                scanBtn.textContent = 'Scanning...';
+                resultsEl.classList.remove('active');
+                issueList.innerHTML = '';
+
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Scan failed');
+                    return res.json();
+                })
+                .then(data => {
+                    renderResults(data);
+                    resultsEl.classList.add('active');
+                })
+                .catch(err => {
+                    issueList.innerHTML = `
+                        <div style="color:#f55a6e;padding:16px;background:#12121a;border:1px solid #1e1e26;border-radius:8px;">
+                            <strong>Error:</strong> ${err.message}
+                        </div>
+                    `;
+                    resultsEl.classList.add('active');
+                })
+                .finally(() => {
+                    scanBtn.disabled = false;
+                    scanBtn.textContent = 'Run Scan';
+                });
+            }
+
+            function renderResults(data) {
+                const { results, score, summary } = data;
+
+                const s = Math.round(score || 0);
+                scoreNumber.textContent = s;
+                document.querySelector('.score-ring').style.background =
+                    `conic-gradient(#5f7af5 ${s}%, #1e1e26 ${s}%)`;
+
+                criticalCount.textContent = summary?.critical || 0;
+                highCount.textContent = summary?.high || 0;
+                mediumCount.textContent = summary?.medium || 0;
+                lowCount.textContent = summary?.low || 0;
+                passedCount.textContent = summary?.passed || 0;
+
+                scanTime.textContent = `Scanned: ${new Date().toLocaleString()}`;
+
+                if (!results || results.length === 0) {
+                    issueList.innerHTML = `
+                        <div style="color:#3bcc8a;padding:16px;background:#12121a;border:1px solid #1e1e26;border-radius:8px;">
+                            No vulnerabilities found.
+                        </div>
+                    `;
+                    return;
+                }
+
+                issueList.innerHTML = results.map((item, i) => {
+                    const sev = item.severity.toLowerCase();
+                    const label = item.severity.charAt(0).toUpperCase() + item.severity.slice(1);
+                    return `
+                        <div class="issue-item ${sev}">
+                            <div class="head">
+                                <span class="title">${i + 1}. ${item.title}</span>
+                                <span class="severity sev-${sev}">${label}</span>
+                            </div>
+                            <div class="description">${item.description}</div>
+                            ${item.fix ? `
+                                <span class="fix-label">Remediation</span>
+                                <div class="fix">${item.fix}</div>
+                                <button class="copy-btn" onclick="copyFix(this)">Copy fix</button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.copyFix = function(btn) {
+                const block = btn.previousElementSibling;
+                if (!block) return;
+                navigator.clipboard.writeText(block.textContent).then(() => {
+                    btn.textContent = 'Copied';
+                    setTimeout(() => { btn.textContent = 'Copy fix'; }, 2000);
+                });
+            };
+
+            scanBtn.addEventListener('click', () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    alert('Enter a URL.');
+                    return;
+                }
+                runScan(url);
+            });
+
+            urlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') scanBtn.click();
+            });
+
+            exportBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
