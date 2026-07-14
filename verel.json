@@ -1,0 +1,8 @@
+{
+    "functions": {
+        "server.py": {
+            "runtime": "python3.9"
+        }
+    },
+    "rewrites": [{ "source": "/(.*)", "destination": "/server.py" }]
+}
